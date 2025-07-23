@@ -1,0 +1,733 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PDF Scanner App',
+      debugShowCheckedModeBanner: false, // Remove debug banner
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Inter', // Assuming 'Inter' font, you might need to add it to pubspec.yaml
+      ),
+      home: const MainMenuScreen(),
+    );
+  }
+}
+
+class MainMenuScreen extends StatefulWidget {
+  const MainMenuScreen({super.key});
+
+  @override
+  State<MainMenuScreen> createState() => _MainMenuScreenState();
+}
+
+class _MainMenuScreenState extends State<MainMenuScreen> {
+  // Dummy data for the "Recently" section
+  final List<Map<String, dynamic>> recentItems = [
+    {'icon': Icons.person, 'title': 'Personal', 'size': '120 MB', 'color': const Color(0xFFE0F7FA)},
+    {'icon': Icons.description, 'title': 'Document', 'size': '58 MB', 'color': const Color(0xFFFFF3E0)},
+    {'icon': Icons.videocam, 'title': 'Video', 'size': '47 MB', 'color': const Color(0xFFE8F5E9)},
+    {'icon': Icons.image, 'title': 'Gallery', 'size': '68 MB', 'color': const Color(0xFFF3E5F5)},
+  ];
+
+  // Dummy data for "Download today" section
+  final List<Map<String, dynamic>> downloadItems = [
+    {'type': 'pdf', 'title': 'Brief-task-today.pdf', 'pages': '11 Pages', 'isStarred': true},
+    {'type': 'pdf', 'title': 'Story-line.pdf', 'pages': '8 Pages', 'isStarred': false},
+    {'type': 'word', 'title': 'Think\'s Habit & behavior.word', 'pages': '3 Pages', 'isStarred': false},
+    {'type': 'excel', 'title': 'Data Reporting Annaual.exc', 'pages': '7 Pages', 'isStarred': false},
+  ];
+
+  int _selectedIndex = 0; // Current selected index for bottom navigation
+
+  // List of widgets to display for each tab
+  static final List<Widget> _screens = <Widget>[
+    _DashboardFilesScreen(), // This will be the content of the Home tab
+    const ScanScreen(), // This will be the content of the Scan tab
+    const Center(child: Text('Profile Screen')), // Placeholder for Profile tab
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white, // Background color of the screen
+      body: _screens[_selectedIndex], // Display the selected screen
+      // Bottom Navigation Bar
+      bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera_alt),
+            label: 'Scan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget for "Recently" item cards
+  Widget _buildRecentItemCard({
+    required IconData icon,
+    required String title,
+    required String size,
+    required Color backgroundColor,
+  }) {
+    return Container(
+      width: 120,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: Colors.blueAccent, size: 30),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                size,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget for "Download today" list items
+  Widget _buildDownloadItem({
+    required String type,
+    required String title,
+    required String pages,
+    required bool isStarred,
+  }) {
+    IconData fileIcon;
+    Color iconColor;
+    switch (type) {
+      case 'pdf':
+        fileIcon = Icons.picture_as_pdf;
+        iconColor = Colors.redAccent;
+        break;
+      case 'word':
+        fileIcon = Icons.description;
+        iconColor = Colors.blueAccent;
+        break;
+      case 'excel':
+        fileIcon = Icons.table_chart;
+        iconColor = Colors.green;
+        break;
+      default:
+        fileIcon = Icons.insert_drive_file;
+        iconColor = Colors.grey;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(fileIcon, color: iconColor, size: 28),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  pages,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(
+              isStarred ? Icons.star : Icons.star_border,
+              color: isStarred ? Colors.amber : Colors.grey[400],
+            ),
+            onPressed: () {
+              // Handle star button press
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Extracted Dashboard Files content into a separate widget
+class _DashboardFilesScreen extends StatelessWidget {
+  // Re-define dummy data for this screen if needed, or pass it from parent
+  final List<Map<String, dynamic>> recentItems = [
+    {'icon': Icons.person, 'title': 'Personal', 'size': '120 MB', 'color': const Color(0xFFE0F7FA)},
+    {'icon': Icons.description, 'title': 'Document', 'size': '58 MB', 'color': const Color(0xFFFFF3E0)},
+    {'icon': Icons.videocam, 'title': 'Video', 'size': '47 MB', 'color': const Color(0xFFE8F5E9)},
+    {'icon': Icons.image, 'title': 'Gallery', 'size': '68 MB', 'color': const Color(0xFFF3E5F5)},
+  ];
+
+  final List<Map<String, dynamic>> downloadItems = [
+    {'type': 'pdf', 'title': 'Brief-task-today.pdf', 'pages': '11 Pages', 'isStarred': true},
+    {'type': 'pdf', 'title': 'Story-line.pdf', 'pages': '8 Pages', 'isStarred': false},
+    {'type': 'word', 'title': 'Think\'s Habit & behavior.word', 'pages': '3 Pages', 'isStarred': false},
+    {'type': 'excel', 'title': 'Data Reporting Annaual.exc', 'pages': '7 Pages', 'isStarred': false},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0, // No shadow
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black54),
+          onPressed: () {
+            // Handle menu button press
+          },
+        ),
+        title: const Text(
+          'Dashboard Files',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.black54), // Placeholder for right icon
+            onPressed: () {
+              // Handle right icon press
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    hintText: 'Search files...',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Recently Section
+              const Text(
+                'Recently',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 120, // Height for horizontal scrollable cards
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: recentItems.length,
+                  itemBuilder: (context, index) {
+                    final item = recentItems[index];
+                    return _DashboardFilesScreen._buildRecentItemCard( // Use static method
+                      icon: item['icon'],
+                      title: item['title'],
+                      size: item['size'],
+                      backgroundColor: item['color'],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Download Today Section
+              const Text(
+                'Download today',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              Text(
+                'January, 21',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Downloaded files list
+              Column(
+                children: downloadItems.map((item) {
+                  return _DashboardFilesScreen._buildDownloadItem( // Use static method
+                    type: item['type'],
+                    title: item['title'],
+                    pages: item['pages'],
+                    isStarred: item['isStarred'],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // Placeholder for the "13 Photo Download" section
+              Container(
+                height: 180, // Height for the image grid/gallery
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    // Placeholder for images
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                color: Colors.grey[400], // Placeholder for left image
+                                child: const Center(child: Icon(Icons.image, size: 40, color: Colors.white)),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      color: Colors.grey[500], // Placeholder for top-right image
+                                      child: const Center(child: Icon(Icons.image, size: 20, color: Colors.white)),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      color: Colors.grey[600], // Placeholder for bottom-right image
+                                      child: const Center(child: Icon(Icons.image, size: 20, color: Colors.white)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // "+11 Photos" overlay
+                    Positioned(
+                      bottom: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '+11 Photos',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper widget for "Recently" item cards (made static)
+  static Widget _buildRecentItemCard({
+    required IconData icon,
+    required String title,
+    required String size,
+    required Color backgroundColor,
+  }) {
+    return Container(
+      width: 120,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: Colors.blueAccent, size: 30),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                size,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget for "Download today" list items (made static)
+  static Widget _buildDownloadItem({
+    required String type,
+    required String title,
+    required String pages,
+    required bool isStarred,
+  }) {
+    IconData fileIcon;
+    Color iconColor;
+    switch (type) {
+      case 'pdf':
+        fileIcon = Icons.picture_as_pdf;
+        iconColor = Colors.redAccent;
+        break;
+      case 'word':
+        fileIcon = Icons.description;
+        iconColor = Colors.blueAccent;
+        break;
+      case 'excel':
+        fileIcon = Icons.table_chart;
+        iconColor = Colors.green;
+        break;
+      default:
+        fileIcon = Icons.insert_drive_file;
+        iconColor = Colors.grey;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(fileIcon, color: iconColor, size: 28),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  pages,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(
+              isStarred ? Icons.star : Icons.star_border,
+              color: isStarred ? Colors.amber : Colors.grey[400],
+            ),
+            onPressed: () {
+              // Handle star button press
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// New ScanScreen widget
+class ScanScreen extends StatelessWidget {
+  const ScanScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF3F51B5), // Dark blue background for app bar
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            // Handle back button press
+            // For a multi-screen app, you might use Navigator.pop(context);
+          },
+        ),
+        title: const Text(
+          'Scan Document',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              // Handle close button press
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Top section (dark blue/purple background)
+          Expanded(
+            child: Container(
+              color: const Color(0xFF3F51B5), // Dark blue/purple color from the image
+              child: const Center(
+                // You can add scan animation or camera preview here
+                child: Icon(Icons.camera_alt, size: 100, color: Colors.white54),
+              ),
+            ),
+          ),
+          // Bottom section ("You can add something")
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  offset: Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'You can add something',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildScanOptionButton(
+                      icon: Icons.description,
+                      label: 'Document',
+                      color: Colors.redAccent,
+                    ),
+                    _buildScanOptionButton(
+                      icon: Icons.image,
+                      label: 'Gallery',
+                      color: Colors.blueAccent,
+                    ),
+                    // Placeholder for the central circular button
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue[700],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.refresh, color: Colors.white, size: 30),
+                    ),
+                    // Placeholder for the two small icons at the bottom
+                    Column(
+                      children: [
+                        Icon(Icons.grid_on, color: Colors.grey[600], size: 24),
+                        const SizedBox(height: 8),
+                        Icon(Icons.person, color: Colors.grey[600], size: 24),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget for scan option buttons
+  Widget _buildScanOptionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 30),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[700],
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
